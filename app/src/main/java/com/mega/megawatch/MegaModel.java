@@ -21,6 +21,10 @@ public class MegaModel extends DrawingModel {
     private TransformObject minuteArrow;
     private TransformObject hourArrow;
 
+    private OffsetObject monthOffset;
+    private OffsetObject dateOffset;
+    private OffsetObject dayOffset;
+
     private RectF calendarRect;
     private float centerX;
     private float centerY;
@@ -80,7 +84,7 @@ public class MegaModel extends DrawingModel {
         float objectYCorner = centerY - rect.height();
         transformObjectSecondArrow.getMatrix().postTranslate(objectXCorner, objectYCorner);
         secondArrow = new TransformObject(transformObjectSecondArrow);
-        this.model.add(secondArrow);
+        this.Add(secondArrow);
         // Add minute arrow
         BitmapObject bitmapMinuteArrow = new BitmapObject(context, R.drawable.minutearrow);
         TransformObject transformObjectMinuteArrow = new TransformObject(bitmapMinuteArrow);
@@ -90,7 +94,7 @@ public class MegaModel extends DrawingModel {
         objectYCorner = centerY - rect.height();
         transformObjectMinuteArrow.getMatrix().postTranslate(objectXCorner, objectYCorner);
         minuteArrow = new TransformObject(transformObjectMinuteArrow);
-        this.model.add(minuteArrow);
+        this.Add(minuteArrow);
 
         // Add hour arrow
         BitmapObject bitmapHourArrow = new BitmapObject(context, R.drawable.hourarrow);
@@ -101,7 +105,7 @@ public class MegaModel extends DrawingModel {
         objectYCorner = centerY - rect.height();
         transformObjectHourArrow.getMatrix().postTranslate(objectXCorner, objectYCorner);
         hourArrow = new TransformObject(transformObjectHourArrow);
-        this.model.add(hourArrow);
+        this.Add(hourArrow);
         // Add knob
         BitmapObject bitmapKnob = new BitmapObject(context, R.drawable.smallknob);
         TransformObject transformObject = new TransformObject(bitmapKnob);
@@ -110,8 +114,35 @@ public class MegaModel extends DrawingModel {
         objectXCorner = centerX - rect.width() / 2;
         objectYCorner = centerY - rect.height() / 2;
         transformObject.getMatrix().postTranslate(objectXCorner, objectYCorner);
-        this.model.add(transformObject);
+        this.Add(transformObject);
+    }
+    private void AddDate()
+    {
+        //Month
+        TextObject month = new TextObject();
+        month.setSize(50);
 
+        month.setColor(0xFF0000FF);
+
+        monthOffset = new OffsetObject(0, 0,  month);
+
+        this.Add(monthOffset);
+
+        // Date
+        TextObject date = new TextObject();
+        date.setSize(50);
+        date.setColor(0xFF0000FF);
+
+        dateOffset = new OffsetObject(0, 0,  date);
+        this.Add(dateOffset);
+
+        // Day
+        TextObject day = new TextObject();
+        day.setSize(40);
+        day.setColor(0xFF0000FF);
+
+        dayOffset = new OffsetObject(0, 0,  day);
+        this.Add(dayOffset);
     }
     private float AddWatch(float width, float height, DrawingModel model) {
         // Add case
@@ -157,6 +188,36 @@ public class MegaModel extends DrawingModel {
         model.Add(calendarObject);
     }
 
+    private void UpdateCalendar(Time time)
+    {
+        TextObject month = (TextObject)monthOffset.getDrawingObject();
+        month.setText(Integer.toString(time.year) + ", " + MonthsRus[time.month]);
+
+        RectF rect = month.getRect();
+        float startX = centerX - rect.width() / 2;
+        float startY = (calendarRect.top + calendarRect.bottom) / 2 - rect.height() / 2;
+        monthOffset.setX(startX);
+        monthOffset.setY(startY);
+
+        TextObject date = (TextObject)dateOffset.getDrawingObject();
+        date.setText(Integer.toString(time.monthDay));
+
+        rect = date.getRect();
+        startX = centerX - rect.width() / 2;
+        startY = (calendarRect.top + calendarRect.bottom) / 2 - rect.height() / 2;
+        startY += 60;
+        dateOffset.setX(startX);
+        dateOffset.setY(startY);
+
+        // Day
+        TextObject day = (TextObject)dayOffset.getDrawingObject();
+        day.setText(DaysRus[time.weekDay]);
+        rect = day.getRect();
+        startX = centerX - rect.width() / 2;
+        startY += 60;
+        dayOffset.setX(startX);
+        dayOffset.setY(startY);
+    }
 
     @Override
     public void Create(float width, float height) {
@@ -182,6 +243,7 @@ public class MegaModel extends DrawingModel {
         bitmapModel.Dispose();
 
         AddArrows(width, height, factor);
+        AddDate();
     }
     @Override
     public void Draw(IRenderer renderer) {
@@ -198,43 +260,7 @@ public class MegaModel extends DrawingModel {
         hourArrow.getMatrix().reset();
         hourArrow.getMatrix().postRotate(hourAngle, centerX, centerY);
 
-        //Month
-        TextObject month = new TextObject();
-        month.setText(MonthsRus[today.month]);
-        month.setSize(50);
-
-        month.setColor(0xFF0000FF);
-
-        RectF rect = month.getRect();
-        float startX = centerX - rect.width() / 2;
-        float startY = (calendarRect.top + calendarRect.bottom) / 2 - rect.height() / 2;
-        OffsetObject offsetObject = new OffsetObject(startX, startY,  month);
-        this.Add(offsetObject);
-
-        // Date
-        TextObject date = new TextObject();
-        date.setText(Integer.toString(today.monthDay));
-        date.setSize(50);
-
-        date.setColor(0xFF0000FF);
-
-        RectF dateRect = date.getRect();
-        startX = centerX - dateRect.width() / 2;
-        startY += 60;
-        OffsetObject offsetDate = new OffsetObject(startX, startY,  date);
-        this.Add(offsetDate);
-        // Day
-        TextObject day = new TextObject();
-        day.setText(DaysRus[today.weekDay]);
-        day.setSize(40);
-
-        day.setColor(0xFF0000FF);
-
-        RectF dayRect = day.getRect();
-        startX = centerX - dayRect.width() / 2;
-        startY += 60;
-        OffsetObject offsetDay = new OffsetObject(startX, startY,  day);
-        this.Add(offsetDay);
+        UpdateCalendar(today);
 
         super.Draw(renderer);
     }
